@@ -1,15 +1,14 @@
-
+require('dotenv').config();
 const express = require('express');
-// const mongoose = require('mongoose');
 const session = require('express-session');
-var passport = require('passport');
-var crypto = require('crypto');
-var routes = require('./routes');
+const passport = require('passport');
+const routes = require('./routes');
 const connection = require('./config/database');
 const pgSession = require('connect-pg-simple')(session);
 
-// Package documentation - https://www.npmjs.com/package/connect-mongo
-const MongoStore = require('connect-mongo')(session);
+/**
+ * -------------- PASSPORT AUTHENTICATION ----------------
+ */
 
 // Need to require the entire Passport config module so app.js knows about it
 require('./config/passport');
@@ -18,11 +17,8 @@ require('./config/passport');
  * -------------- GENERAL SETUP ----------------
  */
 
-// Gives us access to variables set in the .env file via `process.env.VARIABLE_NAME` syntax
-require('dotenv').config();
-
 // Create the Express application
-var app = express();
+const app = express();
 
 app.use(express.json());
 app.use(express.urlencoded({extended: true}));
@@ -35,15 +31,16 @@ app.use(express.urlencoded({extended: true}));
 app.use(
     session({
       store: new pgSession({
-        pool: connection, // connection = instance du Pool pg
-        tableName: 'session', // par défaut "session"
+        pool: connection,
+        tableName: 'session',
+        createTableIfMissing: true,
       }),
       secret: process.env.SESSION_SECRET || 'secret',
       resave: false,
       saveUninitialized: false,
       cookie: {
-        maxAge: 1000 * 60 * 60 * 24, // 1 jour
-        secure: false, // à mettre true en production si HTTPS
+        maxAge: 1000 * 60 * 60 * 24,
+        secure: false,
       },
     })
   );
@@ -55,6 +52,11 @@ app.use(
 app.use(passport.initialize());
 app.use(passport.session());
 
+app.use((req, res, next) => {
+  console.log(req.session);
+  console.log(req.user);
+  next();
+})
 
 /**
  * -------------- ROUTES ----------------
@@ -68,7 +70,6 @@ app.use(routes);
  * -------------- SERVER ----------------
  */
 
-// Server listens on http://localhost:3000
 app.listen(3000, () => {
     console.log('Server is running on http://localhost:3000');
 });

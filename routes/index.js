@@ -1,18 +1,52 @@
 const router = require('express').Router();
 const passport = require('passport');
-const passwordUtils = require('../lib/passwordUtils');
+const genPassword = require('../lib/passwordUtils').genPassword;
 const connection = require('../config/database');
-// const User = connection.models.User;
+const { isAuth } = require('./authMiddelware');
+const { isAdmin } = require('./authMiddelware');
 
 /**
  * -------------- POST ROUTES ----------------
  */
 
- // TODO
- router.post('/login', (req, res, next) => {});
+router.post(
+    '/login',
+    passport.authenticate('local', {
+        successRedirect: '/login-success',
+        failureRedirect: '/login-failure'
+    })
+);
 
- // TODO
- router.post('/register', (req, res, next) => {});
+router.post('/register', async (req, res, next) => {
+    try {
+        const { username, password } = req.body;
+
+        if (!username || !password) {
+            return res.status(400).send('Username and password are required.');
+        }
+
+        const existingUser = await connection.query(
+            'SELECT 1 FROM users WHERE username = $1',
+            [username]
+        );
+
+        if (existingUser.rowCount > 0) {
+            return res.status(409).send('Username is already taken.');
+        }
+
+        const { salt, hash } = genPassword(password);
+
+        await connection.query(
+            'INSERT INTO users (username, hash, salt, admin) VALUES ($1, $2, $3, $4)',
+            [username, hash, salt, admin]
+        );
+
+        return res.redirect('/login');
+
+    } catch (err) {
+        return next(err);
+    }
+});
 
 
  /**
@@ -38,35 +72,30 @@ router.get('/login', (req, res, next) => {
 // When you visit http://localhost:3000/register, you will see "Register Page"
 router.get('/register', (req, res, next) => {
 
-    const form = '<h1>Register Page</h1><form method="post" action="register">\
+    const form = '<h1>Register Page</h1><form method="post" action="/register">\
                     Enter Username:<br><input type="text" name="username">\
                     <br>Enter Password:<br><input type="password" name="password">\
                     <br><br><input type="submit" value="Submit"></form>';
 
     res.send(form);
-    
 });
 
-/**
- * Lookup how to authenticate users on routes with Local Strategy
- * Google Search: "How to use Express Passport Local Strategy"
- * 
- * Also, look up what behaviour express session has without a maxage set
- */
-router.get('/protected-route', (req, res, next) => {
-    
-    // This is how you check if a user is authenticated and protect a route.  You could turn this into a custom middleware to make it less redundant
-    if (req.isAuthenticated()) {
-        res.send('<h1>You are authenticated</h1><p><a href="/logout">Logout and reload</a></p>');
-    } else {
-        res.send('<h1>You are not authenticated</h1><p><a href="/login">Login</a></p>');
-    }
+router.get('/protected-route', isAuth, (req, res, next) => {
+    res.send('You made it to the USER route');
+});
+
+router.get('/admin-route', isAdmin, (req, res, next) => {
+    res.send('You made it to the ADMIN route');
 });
 
 // Visiting this route logs the user out
 router.get('/logout', (req, res, next) => {
-    req.logout();
-    res.redirect('/protected-route');
+    req.logout((err) => {
+        if (err) {
+            return next(err);
+        }
+        return res.redirect('/protected-route');
+    });
 });
 
 router.get('/login-success', (req, res, next) => {

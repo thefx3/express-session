@@ -41,7 +41,7 @@ connection.connect()
 // });
 
 
-const User = connection.model('User', UserSchema);
+// const User = connection.model('User', UserSchema);
 
 // Expose the connection
 module.exports = connection;
