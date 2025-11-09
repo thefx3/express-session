@@ -11,11 +11,27 @@
   "license": "ISC",
   "dependencies": {
     "connect-mongo": "^3.1.2",
-    "dotenv": "^8.2.0",
-    "express": "^4.17.1",
-    "express-session": "^1.17.0",
-    "mongoose": "^5.7.12",
-    "passport": "^0.4.0",
-    "passport-local": "^1.0.0"
-  }
+    "connect-pg-simple": "^10.0.0",
+    "dotenv": "^8.6.0",
+    "ejs": "^3.1.10",
+    "express": "^4.21.2",
+    "express-session": "^1.18.2",
+    "express-validator": "^7.3.0",
+    "mongoose": "^8.19.3",
+    "passport": "^0.7.0",
+    "passport-local": "^1.0.0",
+    "pg": "^8.16.3"
+  },
+  "directories": {
+    "lib": "lib"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/thefx3/express-session.git"
+  },
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/thefx3/express-session/issues"
+  },
+  "homepage": "https://github.com/thefx3/express-session#readme"
 }
